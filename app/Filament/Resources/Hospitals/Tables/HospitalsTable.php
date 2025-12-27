@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Hospitals\Tables;
 
+use App\Models\User;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -10,6 +11,7 @@ use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
@@ -71,6 +73,12 @@ class HospitalsTable
             ])
             ->filters([
                 TrashedFilter::make(),
+                SelectFilter::make('user_id')
+                    ->label('User')
+                    ->relationship('user', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->hidden(fn() => !auth()->user()?->hasRole('super_admin')),
             ])
             ->recordActions([
                 ViewAction::make(),
@@ -82,7 +90,7 @@ class HospitalsTable
                     ForceDeleteBulkAction::make(),
                     RestoreBulkAction::make(),
                 ])
-                ->hidden(fn () => !auth()->user()?->hasRole('super_admin')),
+                    ->hidden(fn() => !auth()->user()?->hasRole('super_admin')),
             ]);
     }
 }

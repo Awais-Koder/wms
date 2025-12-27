@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\Hospital;
 use App\Models\HospitalPayment;
 use App\Models\UserExpense;
 use Filament\Widgets\Concerns\InteractsWithPageFilters;
@@ -14,13 +15,14 @@ class ExpenseIncomeStatsWidget extends StatsOverviewWidget
 
     protected function getStats(): array
     {
+        $totalHospitalPaymentsCount = Hospital::sum('amount');
         $incomeStats = $this->getIncomeStats();
         $expenseStats = $this->getExpenseStats();
         $netProfit = $incomeStats['total_collected'] - $expenseStats['total_expenses'];
 
         return [
-            Stat::make('Total Income (All Hospitals)', 'PKR ' . number_format($incomeStats['total_income'], 2))
-                ->description('Total amount from all hospitals')
+            Stat::make('Total Amount (All Hospitals)', 'PKR ' . number_format($totalHospitalPaymentsCount, 2))
+                ->description('Total payments from all hospitals')
                 ->descriptionIcon('heroicon-m-building-office-2')
                 ->color('info'),
             Stat::make('Total Collected', 'PKR ' . number_format($incomeStats['total_collected'], 2))
@@ -63,12 +65,16 @@ class ExpenseIncomeStatsWidget extends StatsOverviewWidget
             $query->whereYear('month', $year);
         }
 
+        $totalAmountAllHospitals = (clone $query)->sum('amount');
+        $totalPaymentsCount = (clone $query)->count();
         $totalIncome = (clone $query)->sum('amount');
         $totalCollected = (clone $query)->where('is_collected', true)->sum('paid_amount');
         $totalPending = $totalIncome - $totalCollected;
         $paymentsCount = (clone $query)->where('is_collected', true)->count();
 
         return [
+            'total_amount_all_hospitals' => $totalAmountAllHospitals,
+            'total_payments_count' => $totalPaymentsCount,
             'total_income' => $totalIncome,
             'total_collected' => $totalCollected,
             'total_pending' => $totalPending,
