@@ -27,7 +27,7 @@ class HospitalResource extends Resource
 
     protected static string | UnitEnum | null $navigationGroup = 'Hospital Settings';
 
-    protected static ?string $recordTitleAttribute = 'name';
+    protected static ?string $recordTitleAttribute = 'uuid';
 
     public static function form(Schema $schema): Schema
     {

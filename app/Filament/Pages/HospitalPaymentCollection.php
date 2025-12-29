@@ -50,7 +50,7 @@ class HospitalPaymentCollection extends Page implements HasForms, HasTable
             ->select('hospital_id')
             ->selectRaw('SUM(CASE WHEN is_collected = 1 THEN paid_amount ELSE 0 END) as collected_amount')
             ->selectRaw('SUM(amount) - SUM(CASE WHEN is_collected = 1 THEN paid_amount ELSE 0 END) as pending_amount')
-            ->selectRaw('SUM(amount) as total_amount')
+            ->selectRaw('SUM(amount) as payment_total_amount')
             ->whereNull('deleted_at');
 
         // Apply filters to payment subquery
@@ -77,8 +77,8 @@ class HospitalPaymentCollection extends Page implements HasForms, HasTable
             ->select([
                 'users.*',
                 DB::raw('COALESCE(SUM(payment_stats.collected_amount), 0) as collected_amount'),
-                DB::raw('COALESCE(SUM(payment_stats.pending_amount), 0) as pending_amount'),
-                DB::raw('COALESCE(SUM(payment_stats.total_amount), 0) as total_amount'),
+                DB::raw('COALESCE(SUM(payment_stats.payment_total_amount), 0) - COALESCE(SUM(payment_stats.collected_amount), 0) as pending_amount'),
+                DB::raw('COALESCE(SUM(hospitals.amount), 0) as total_amount'),
             ])
             ->leftJoin('hospitals', function ($join) {
                 $join->on('users.id', '=', 'hospitals.user_id')
@@ -153,6 +153,11 @@ class HospitalPaymentCollection extends Page implements HasForms, HasTable
                     ->label('Email')
                     ->searchable()
                     ->sortable(),
+                TextColumn::make('hospitals.uuid')
+                    ->label('Hospital UUID')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->limit(30),
                 TextColumn::make('hospitals_count')
                     ->label('Total Hospitals')
                     ->counts('hospitals')
