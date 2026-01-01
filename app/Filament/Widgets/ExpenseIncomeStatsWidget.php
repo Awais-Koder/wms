@@ -108,4 +108,8 @@ class ExpenseIncomeStatsWidget extends StatsOverviewWidget
             'expenses_count' => $query->count(),
         ];
     }
+    public static function isDiscovered(): bool
+    {
+        return false;
+    }
 }
